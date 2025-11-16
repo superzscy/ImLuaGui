@@ -4,7 +4,17 @@
 #include <d3d11.h>
 #include <tchar.h>
 #include "lua.hpp"
+#include "sol.hpp"
 #include <iostream>
+#include <chrono>
+
+namespace sol_ImGui
+{
+    void Init(sol::state& lua);
+}
+
+using Clock = std::chrono::high_resolution_clock;
+using TimePoint = std::chrono::time_point<Clock>;
 
 // Data
 static ID3D11Device* g_pd3dDevice = nullptr;
@@ -20,21 +30,6 @@ void CleanupDeviceD3D();
 void CreateRenderTarget();
 void CleanupRenderTarget();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-extern lua_State* InitLua();
-extern void RegisterImGuiToLua(lua_State* L);
-
-lua_State* L;
-
-void RenderLuaUI()
-{
-    lua_getglobal(L, "DrawUI");
-    if (lua_pcall(L, 0, 0, 0) != LUA_OK)
-    {
-        //std::cout << lua_tostring(L, -1) << std::endl;
-        lua_pop(L, 1);
-    }
-}
 
 int main(int, char**)
 {
@@ -84,17 +79,27 @@ int main(int, char**)
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-    L = InitLua();
-    RegisterImGuiToLua(L);
+    // Lua code initialization
+    sol::state lua;
+    lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::string);
 
-    if (luaL_dofile(L, "scripts/main.lua") != LUA_OK)
+    sol_ImGui::Init(lua);
+
+    auto script_from_file_result = lua.script_file("scripts/main.lua");
+    if (!script_from_file_result.valid())
     {
-        std::cout << lua_tostring(L, -1) << std::endl;
+        sol::error err = script_from_file_result;
+        std::cerr
+            << "The code from the file has failed to run!\n"
+            << err.what() << "\nPanicking and exiting..."
+            << std::endl;
 		return 1;
     }
 
     // Main loop
     bool done = false;
+    TimePoint lastTime = Clock::now();
+
     while (!done)
     {
         // Poll and handle messages (inputs, window resize, etc.)
@@ -129,9 +134,27 @@ int main(int, char**)
 
         ImGui_ImplDX11_NewFrame();
         ImGui_ImplWin32_NewFrame();
+
         ImGui::NewFrame();
 
-        RenderLuaUI();
+        TimePoint now = Clock::now();
+        std::chrono::duration<float> elapsed = now - lastTime;
+        lastTime = now;
+
+        float deltaTime = elapsed.count(); // seconds
+
+        // Lua code loop
+        auto func = lua["UpdateUI"];
+        if (func.valid()) 
+        {
+            sol::protected_function protected_func = func;
+            sol::protected_function_result result = protected_func(deltaTime);
+            if (!result.valid())
+            {
+                sol::error err = result;
+                std::cerr << "Lua Error: " << err.what() << std::endl;
+            }
+        }
 
         ImGui::Render();
 
@@ -145,8 +168,6 @@ int main(int, char**)
         //HRESULT hr = g_pSwapChain->Present(0, 0); // Present without vsync
         g_SwapChainOccluded = (hr == DXGI_STATUS_OCCLUDED);
     }
-
-    lua_close(L);
 
     // Cleanup
     ImGui_ImplDX11_Shutdown();

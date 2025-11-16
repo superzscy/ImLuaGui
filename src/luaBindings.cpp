@@ -1,25 +1,70 @@
-#include "lua.hpp"
+#define SOL_ALL_SAFETIES_ON 1
 #include "imgui.h"
-#include <iostream>
+#include "sol.hpp"
 
-lua_State* InitLua()
+namespace sol_ImGui
 {
-    lua_State* L = luaL_newstate();
-    luaL_openlibs(L);
-    return L;
-}
+    // Widgets: Main
+    inline void Text(const std::string& text)
+    {
+        ImGui::Text(text.c_str());
+    }
 
-static int lua_ImGui_Text(lua_State* L)
-{
-    const char* text = luaL_checkstring(L, 1);
-    ImGui::Text("%s", text);
-    return 0;
-}
+    inline bool Button(const std::string& label)
+    {
+        return ImGui::Button(label.c_str());
+    }
 
-void RegisterImGuiToLua(lua_State* L)
-{
-    lua_newtable(L);
-    lua_pushcfunction(L, lua_ImGui_Text);
-    lua_setfield(L, -2, "Text");
-    lua_setglobal(L, "ImGui");
+    inline bool Button(const std::string& label, float sizeX, float sizeY)
+    {
+        return ImGui::Button(label.c_str(), { sizeX, sizeY });
+    }
+
+    inline std::tuple<bool, bool> Checkbox(const std::string& label, bool v)
+    {
+        bool value{ v };
+        bool pressed = ImGui::Checkbox(label.c_str(), &value);
+
+        return std::make_tuple(value, pressed);
+    }
+
+    inline std::tuple<std::string, bool> InputText(const std::string& label, std::string text, unsigned int buf_size) 
+    { 
+        bool value_changed = ImGui::InputText(label.c_str(), &text[0], buf_size);
+        return std::make_tuple(text, value_changed);
+    }
+
+    inline std::tuple<std::string, bool> InputText(const std::string& label, std::string text, unsigned int buf_size, int flags)
+    {
+        bool value_changed = ImGui::InputText(label.c_str(), &text[0], buf_size, static_cast<ImGuiInputTextFlags>(flags));
+        return std::make_tuple(text, value_changed);
+    }
+
+    // Cursor / Layout
+    inline void Separator() { ImGui::Separator(); }
+
+    void Init(sol::state& lua)
+    {
+        sol::table ImGui = lua.create_named_table("ImGui");
+
+#pragma region Widgets: Main
+        ImGui.set_function("Text", Text);
+
+        ImGui.set_function("Button", sol::overload(
+            sol::resolve<bool(const std::string&)>(Button),
+            sol::resolve<bool(const std::string&, float, float)>(Button)
+        ));
+
+        ImGui.set_function("Checkbox", Checkbox);
+
+        ImGui.set_function("InputText", sol::overload(
+                sol::resolve<std::tuple<std::string, bool>(const std::string&, std::string, unsigned int)>(InputText),
+                sol::resolve<std::tuple<std::string, bool>(const std::string&, std::string, unsigned int, int)>(InputText)
+            ));
+#pragma endregion Widgets: Main
+
+#pragma region Cursor / Layout
+        ImGui.set_function("Separator", Separator);
+#pragma endregion Cursor / Layout
+    }
 }

@@ -10,6 +10,7 @@ project "ImLuaGui"
     architecture ("x86_64")
     targetdir "build/%{cfg.buildcfg}"
     debugdir "%{prj.location}/.."
+    cppdialect "C++17"
 
     files {
         "src/**.h",
@@ -26,7 +27,8 @@ project "ImLuaGui"
     includedirs {
         "imgui",
         "imgui/backends",
-        "lua/include"
+        "lua/include",
+        "sol",
     }
 
     libdirs {
