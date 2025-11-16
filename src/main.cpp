@@ -3,7 +3,11 @@
 #include "imgui_impl_dx11.h"
 #include <d3d11.h>
 #include <tchar.h>
-#include "lua.hpp"
+extern "C" {
+#include "lua.h"
+#include "lualib.h"
+#include "lauxlib.h"
+}
 #include "sol.hpp"
 #include <iostream>
 #include <chrono>
