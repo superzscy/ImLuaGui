@@ -30,14 +30,20 @@ namespace sol_ImGui
 
     inline std::tuple<std::string, bool> InputText(const std::string& label, std::string text, unsigned int buf_size) 
     { 
-        bool value_changed = ImGui::InputText(label.c_str(), &text[0], buf_size);
-        return std::make_tuple(text, value_changed);
+        std::vector<char> buf(buf_size);
+        strncpy(buf.data(), text.c_str(), buf_size);
+        buf[buf_size - 1] = '\0';
+        bool value_changed = ImGui::InputText(label.c_str(), buf.data(), buf_size);
+        return { std::string(buf.data()), value_changed };
     }
 
     inline std::tuple<std::string, bool> InputText(const std::string& label, std::string text, unsigned int buf_size, int flags)
     {
-        bool value_changed = ImGui::InputText(label.c_str(), &text[0], buf_size, static_cast<ImGuiInputTextFlags>(flags));
-        return std::make_tuple(text, value_changed);
+        std::vector<char> buf(buf_size);
+        strncpy(buf.data(), text.c_str(), buf_size);
+        buf[buf_size - 1] = '\0';
+        bool value_changed = ImGui::InputText(label.c_str(), buf.data(), buf_size, static_cast<ImGuiInputTextFlags>(flags));
+        return { std::string(buf.data()), value_changed };
     }
 
     // Cursor / Layout
