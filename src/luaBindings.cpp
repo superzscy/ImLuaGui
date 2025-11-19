@@ -48,6 +48,9 @@ namespace sol_ImGui
 
     // Cursor / Layout
     inline void Separator() { ImGui::Separator(); }
+    inline void SameLine() { ImGui::SameLine(); }
+    inline void SameLine(float offsetFromStartX) { ImGui::SameLine(offsetFromStartX); }
+    inline void SameLine(float offsetFromStartX, float spacing) { ImGui::SameLine(offsetFromStartX, spacing); }
 
     void Init(sol::state& lua)
     {
@@ -71,6 +74,10 @@ namespace sol_ImGui
 
 #pragma region Cursor / Layout
         ImGui.set_function("Separator", Separator);
+        ImGui.set_function("SameLine", sol::overload(
+            sol::resolve<void()>(SameLine),
+            sol::resolve<void(float)>(SameLine)
+            ));
 #pragma endregion Cursor / Layout
     }
 }

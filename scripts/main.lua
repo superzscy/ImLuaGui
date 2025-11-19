@@ -68,11 +68,11 @@ function UpdateUI()
 
     -- ImGui.Separator()
 
-    -- -------------------------------
-    -- -- SameLine Example
-    -- -------------------------------
-    -- ImGui.Text("SameLine Example:")
-    -- if ImGui.Button("Yes") then print("Yes") end
-    -- ImGui.SameLine()
-    -- if ImGui.Button("No") then print("No") end
+    -------------------------------
+    -- SameLine Example
+    -------------------------------
+    ImGui.Text("SameLine Example:")
+    if ImGui.Button("Yes") then print("Yes") end
+    ImGui.SameLine()
+    if ImGui.Button("No") then print("No") end
 end
