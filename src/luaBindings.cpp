@@ -31,7 +31,7 @@ namespace sol_ImGui
     inline std::tuple<std::string, bool> InputText(const std::string& label, std::string text, unsigned int buf_size) 
     { 
         std::vector<char> buf(buf_size);
-        strncpy(buf.data(), text.c_str(), buf_size);
+        strncpy_s(buf.data(), buf_size, text.c_str(), buf_size - 1);
         buf[buf_size - 1] = '\0';
         bool value_changed = ImGui::InputText(label.c_str(), buf.data(), buf_size);
         return { std::string(buf.data()), value_changed };
@@ -40,7 +40,7 @@ namespace sol_ImGui
     inline std::tuple<std::string, bool> InputText(const std::string& label, std::string text, unsigned int buf_size, int flags)
     {
         std::vector<char> buf(buf_size);
-        strncpy(buf.data(), text.c_str(), buf_size);
+        strncpy_s(buf.data(), buf_size, text.c_str(), buf_size - 1);
         buf[buf_size - 1] = '\0';
         bool value_changed = ImGui::InputText(label.c_str(), buf.data(), buf_size, static_cast<ImGuiInputTextFlags>(flags));
         return { std::string(buf.data()), value_changed };
