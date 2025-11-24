@@ -3,7 +3,7 @@ local inputText = "Hello"
 local checkState = false
 local sliderValue = 0.3
 local colorValue = { 0.8, 0.2, 0.1 }
-
+local curListItemIndex = 1
 local btnClicks = 0
 
 function UpdateUI()
@@ -45,6 +45,21 @@ function UpdateUI()
     if pressed then
         checkState = _checkState
         print("Checkbox checkState:", checkState)
+    end
+    ImGui.Separator()
+
+    -------------------------------
+    -- ListBox Example
+    -------------------------------
+    ImGui.Text("ListBox Example:")
+    local items = {}
+    for i = 1, 10 do
+        table.insert(items, "Item " .. i)
+    end
+    local _curListItemIndex, clicked = ImGui.ListBox("options", curListItemIndex, items, 10)
+    if clicked then
+        curListItemIndex = _curListItemIndex
+        print("ListBox selected index:", curListItemIndex)
     end
     ImGui.Separator()
 

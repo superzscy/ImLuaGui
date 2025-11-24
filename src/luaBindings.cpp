@@ -28,22 +28,43 @@ namespace sol_ImGui
         return std::make_tuple(value, pressed);
     }
 
-    inline std::tuple<std::string, bool> InputText(const std::string& label, std::string text, unsigned int buf_size) 
+    inline std::tuple<std::string, bool> InputText(const std::string& label, std::string text, unsigned int bufSize) 
     { 
-        std::vector<char> buf(buf_size);
-        strncpy_s(buf.data(), buf_size, text.c_str(), buf_size - 1);
-        buf[buf_size - 1] = '\0';
-        bool value_changed = ImGui::InputText(label.c_str(), buf.data(), buf_size);
+        std::vector<char> buf(bufSize);
+        strncpy_s(buf.data(), bufSize, text.c_str(), bufSize - 1);
+        buf[bufSize - 1] = '\0';
+        bool value_changed = ImGui::InputText(label.c_str(), buf.data(), bufSize);
         return { std::string(buf.data()), value_changed };
     }
 
-    inline std::tuple<std::string, bool> InputText(const std::string& label, std::string text, unsigned int buf_size, int flags)
+    inline std::tuple<std::string, bool> InputText(const std::string& label, std::string text, unsigned int bufSize, int flags)
     {
-        std::vector<char> buf(buf_size);
-        strncpy_s(buf.data(), buf_size, text.c_str(), buf_size - 1);
-        buf[buf_size - 1] = '\0';
-        bool value_changed = ImGui::InputText(label.c_str(), buf.data(), buf_size, static_cast<ImGuiInputTextFlags>(flags));
+        std::vector<char> buf(bufSize);
+        strncpy_s(buf.data(), bufSize, text.c_str(), bufSize - 1);
+        buf[bufSize - 1] = '\0';
+        bool value_changed = ImGui::InputText(label.c_str(), buf.data(), bufSize, static_cast<ImGuiInputTextFlags>(flags));
         return { std::string(buf.data()), value_changed };
+    }
+
+    inline std::tuple<int, bool> ListBox(const std::string& label, int currentItem, const sol::table& items, int itemCount)
+    {
+        std::vector<std::string> strings;
+        for (int i = 1; i <= itemCount; i++)
+        {
+            const auto& stringItem = items.get<sol::optional<std::string>>(i);
+            strings.push_back(stringItem.value_or("Missing"));
+        }
+
+        std::vector<const char*> cstrings;
+        for (auto& string : strings)
+        {
+            cstrings.push_back(string.c_str());
+        }
+
+        currentItem -= 1; // lua start from 1
+
+        bool clicked = ImGui::ListBox(label.c_str(), &currentItem, cstrings.data(), itemCount);
+        return std::make_tuple(currentItem + 1, clicked);
     }
 
     // Cursor / Layout
@@ -71,6 +92,12 @@ namespace sol_ImGui
                 sol::resolve<std::tuple<std::string, bool>(const std::string&, std::string, unsigned int, int)>(InputText)
             ));
 #pragma endregion Widgets: Main
+
+#pragma region Widgets: List Boxes
+        ImGui.set_function("ListBox", sol::overload(
+            sol::resolve<std::tuple<int, bool>(const std::string&, int, const sol::table&, int)>(ListBox)
+        ));
+#pragma endregion Widgets: List Boxes
 
 #pragma region Cursor / Layout
         ImGui.set_function("Separator", Separator);

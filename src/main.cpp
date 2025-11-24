@@ -85,7 +85,18 @@ int main(int, char**)
 
     // Lua code initialization
     sol::state lua;
-    lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::string);
+    lua.open_libraries(
+        sol::lib::base,
+        sol::lib::package,
+        sol::lib::coroutine,        
+        sol::lib::string,
+        sol::lib::os,
+        sol::lib::table,
+        sol::lib::math,
+        sol::lib::io,
+        sol::lib::os,
+        sol::lib::utf8,
+        sol::lib::debug);
 
     sol_ImGui::Init(lua);
 
